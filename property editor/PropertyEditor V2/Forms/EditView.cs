@@ -62,6 +62,14 @@ namespace PropertyEditor
             }
             Console.WriteLine("Old Size:{0} New Size:{1}", oldSize, obj.Size);
             obj.Keys.Nations[obj.Keys.Type == 9 ? nation : 0] = txtValue.Text; // change new value
+            if (!ObjectsManager._editSaved.ContainsKey(obj.Id))
+            {
+                ObjectsManager._editSaved.Add(obj.Id, obj);
+            }
+            else
+            {
+                ObjectsManager._editSaved[obj.Id] = obj;
+            }
             DialogResult = DialogResult.OK;
             Close();
         }

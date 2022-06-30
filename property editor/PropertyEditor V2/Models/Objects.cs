@@ -11,6 +11,15 @@ namespace PropertyEditor.Models
         public ulong NewOffset { get; set; }
         public ulong Size { get; set; }
         public ObjectsValues Keys { get; set; }
+
+        public string GetNameTitle()
+        {
+            if (Keys != null)
+            {
+                return Keys.Name;
+            }
+            return ".";
+        }
     }
 
     public class ObjectsValues

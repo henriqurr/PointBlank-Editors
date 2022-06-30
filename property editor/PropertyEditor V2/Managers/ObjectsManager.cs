@@ -14,6 +14,8 @@ namespace PropertyEditor.Managers
     {
         public static List<Objects> _objects = new List<Objects>();
         public static Dictionary<ulong, ulong> _changeOffsets;
+        public static Dictionary<ulong, Objects> _editSaved = new Dictionary<ulong, Objects>();
+        public static Dictionary<ulong, Objects> _loadSaved = new Dictionary<ulong, Objects>();
 
         public static void GetObjects(BinaryReader reader, Header header)
         {
@@ -196,50 +198,6 @@ namespace PropertyEditor.Managers
                 }
             }
         }
-
-        //Oficial Code
-        //public static string GetRegStyleName(uint type)
-        //{
-        //    string result;
-        //    if (Convert.ToBoolean(type & 0x10000)) //Root ?
-        //    {
-        //        result = "ROOT";
-        //    }
-        //    else
-        //    {
-        //        switch (type)
-        //        {
-        //            case 0: 
-        //                result = "INT32";
-        //                break;
-        //            case 1: 
-        //                result = "REAL32";
-        //                break;
-        //            case 2: 
-        //                result = "STRING";
-        //                break;
-        //            case 3:
-        //                result = "VEC2D";
-        //                break;
-        //            case 4: 
-        //                result = "VEC3D";
-        //                break;
-        //            case 5: 
-        //                result = "VEC4D";
-        //                break;
-        //            case 6: 
-        //                result = "COLOR"; //HEX
-        //                break;
-        //            case 7:
-        //                result = "MATRIX";
-        //                break;
-        //            default:
-        //                result = "0"; // 0
-        //                break;
-        //        }
-        //    }
-        //    return result;
-        //}
 
         public static void WriteObjects(BinaryWriter bw)
         {
@@ -430,6 +388,104 @@ namespace PropertyEditor.Managers
                             break;
                         }
                 }
+            }
+        }
+
+        /// <summary>
+        /// EDITED PEFS
+        /// </summary>
+        /// <param name="bw">Buffer</param>
+        /// <returns></returns>
+        /// 
+        public static void SaveEdited(BinaryWriter bw)
+        {
+            if (_editSaved.Count == 0)
+                return;
+            bw.Write(_editSaved.Count); //int
+            bw.Write((int)Settings.Nation);
+            foreach (Objects obj in _editSaved.Values)
+            {
+                bw.Write(obj.Type);
+                bw.Write(obj.Id);
+                bw.Write(obj.Offset);
+                bw.Write(obj.Size);
+                bw.Write((byte)obj.Keys.Name.Length);
+                bw.Write(Encoding.GetEncoding(Settings.Encoding).GetBytes(obj.Keys.Name));
+                if (!obj.Keys.IsFolder)
+                {
+                    bw.Write(obj.Keys.Type);
+                    if (obj.Keys.Type == 9)
+                    {
+                        bw.Write(obj.Keys.ValueType);
+                        bw.Write(obj.Keys.NationsCount);
+                    }
+                    WriteValuesByNations(bw, obj);
+                }
+            }
+        }
+
+        public static void LoadEdited(BinaryReader reader)
+        {
+            int count = reader.ReadInt32();
+            reader.ReadInt32(); //nation
+            for (int i = 0; i < count; i++)
+            {
+                Objects obj = new Objects
+                {
+                    Type = reader.ReadInt32(),
+                    Id = reader.ReadUInt64(),
+                    Offset = reader.ReadUInt64(),
+                    Size = reader.ReadUInt64()
+                };
+                obj.Keys = new ObjectsValues
+                {
+                    Folders = new List<ulong>(),
+                    Items = new List<ulong>(),
+                    Nations = new List<object>()
+                };
+                int lenghtName = reader.ReadByte();
+                obj.Keys.Name = Encoding.GetEncoding(Settings.Encoding).GetString(reader.ReadBytes(lenghtName));
+                obj.Keys.IsFolder = false;
+                obj.Keys.Type = reader.ReadInt32();
+                obj.Keys.ValueType = obj.Keys.Type == 9 ? reader.ReadInt32() : obj.Keys.Type;
+                obj.Keys.NationsCount = obj.Keys.Type == 9 ? reader.ReadInt32() : 1;
+                GetValuesByNations(reader, obj); //puxa valores
+                _loadSaved.Add(obj.Id, obj);
+            }
+        }
+
+        public static void PutEdit()
+        {
+            if (_loadSaved.Count == 0)
+                return;
+            int loaded = 0;
+            foreach (Objects obj in _loadSaved.Values)
+            {
+                Objects actualObject = GetObjectById(obj.Id);
+                if (actualObject != null)
+                {
+                    //object
+                    actualObject.Type = obj.Type;
+                    actualObject.Id = obj.Id;
+                    actualObject.Offset = obj.Offset;
+                    actualObject.Size = obj.Size;
+
+                    //keys
+                    actualObject.Keys.Name = obj.Keys.Name;
+                    actualObject.Keys.IsFolder = obj.Keys.IsFolder;
+                    actualObject.Keys.Type = obj.Keys.Type;
+                    actualObject.Keys.ValueType = obj.Keys.ValueType;
+                    actualObject.Keys.NationsCount = obj.Keys.NationsCount;
+
+                    //nations
+                    actualObject.Keys.Nations = obj.Keys.Nations;
+
+                    loaded++;
+                }
+            }
+            if (loaded > 0)
+            {
+                MessageBox.Show($"{loaded} edições carregadas.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

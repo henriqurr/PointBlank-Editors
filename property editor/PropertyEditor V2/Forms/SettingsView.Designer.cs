@@ -44,29 +44,29 @@
             this.cbDebugConsole.AutoSize = true;
             this.cbDebugConsole.Location = new System.Drawing.Point(7, 20);
             this.cbDebugConsole.Name = "cbDebugConsole";
-            this.cbDebugConsole.Size = new System.Drawing.Size(126, 17);
+            this.cbDebugConsole.Size = new System.Drawing.Size(170, 17);
             this.cbDebugConsole.TabIndex = 0;
-            this.cbDebugConsole.Text = "Show debug console";
+            this.cbDebugConsole.Text = "Mostrar console de depuração";
             this.cbDebugConsole.UseVisualStyleBackColor = true;
             this.cbDebugConsole.CheckedChanged += new System.EventHandler(this.cbDebugConsole_CheckedChanged);
             // 
             // btSave
             // 
-            this.btSave.Location = new System.Drawing.Point(12, 110);
+            this.btSave.Location = new System.Drawing.Point(19, 110);
             this.btSave.Name = "btSave";
-            this.btSave.Size = new System.Drawing.Size(69, 23);
+            this.btSave.Size = new System.Drawing.Size(75, 23);
             this.btSave.TabIndex = 1;
-            this.btSave.Text = "Save";
+            this.btSave.Text = "Salvar";
             this.btSave.UseVisualStyleBackColor = true;
             this.btSave.Click += new System.EventHandler(this.btSave_Click);
             // 
             // btCancel
             // 
-            this.btCancel.Location = new System.Drawing.Point(93, 110);
+            this.btCancel.Location = new System.Drawing.Point(110, 110);
             this.btCancel.Name = "btCancel";
-            this.btCancel.Size = new System.Drawing.Size(72, 23);
+            this.btCancel.Size = new System.Drawing.Size(78, 23);
             this.btCancel.TabIndex = 2;
-            this.btCancel.Text = "Cancel";
+            this.btCancel.Text = "Cancelar";
             this.btCancel.UseVisualStyleBackColor = true;
             this.btCancel.Click += new System.EventHandler(this.btCancel_Click);
             // 
@@ -76,7 +76,7 @@
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Location = new System.Drawing.Point(6, 19);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(141, 21);
+            this.comboBox1.Size = new System.Drawing.Size(170, 21);
             this.comboBox1.TabIndex = 3;
             // 
             // groupBox1
@@ -84,17 +84,17 @@
             this.groupBox1.Controls.Add(this.comboBox1);
             this.groupBox1.Location = new System.Drawing.Point(12, 54);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(153, 50);
+            this.groupBox1.Size = new System.Drawing.Size(182, 50);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Nations";
+            this.groupBox1.Text = "Pais da cliente";
             // 
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.cbDebugConsole);
             this.groupBox2.Location = new System.Drawing.Point(12, 4);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(153, 44);
+            this.groupBox2.Size = new System.Drawing.Size(182, 44);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Developer Tools";
@@ -103,7 +103,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(173, 141);
+            this.ClientSize = new System.Drawing.Size(206, 141);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btCancel);
@@ -114,7 +114,7 @@
             this.MinimizeBox = false;
             this.Name = "SettingsView";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Settings";
+            this.Text = "Configurações";
             this.Load += new System.EventHandler(this.Settings_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);

@@ -63,6 +63,7 @@ namespace PropertyEditor
             Settings.Nation = (Nation)comboBox1.SelectedIndex;
             SaveNewInfos();
             DialogResult = DialogResult.OK;
+            Program._propertyEditor.lbNation.Text = "Pais da cliente: " + Settings.Nation;
         }
     }
 }

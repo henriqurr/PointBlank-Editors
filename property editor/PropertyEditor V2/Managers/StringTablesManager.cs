@@ -55,8 +55,12 @@ namespace PropertyEditor.Managers
             {
                 var stringTable = _stringTables[i];
                 bw.Write(Encoding.GetEncoding(Settings.Encoding).GetBytes(stringTable.Name));
+                if ((i + 1) == _stringTables.Count && Program._propertyEditor.isEnvSet)
+                {
+                    break;
+                }
                 bw.Write((ushort)2573);
-                for(int j = 0; j < stringTable.Values.Count; j++)
+                for (int j = 0; j < stringTable.Values.Count; j++)
                 {
                     var item = stringTable.Values[j];
                     bw.Write(Encoding.GetEncoding(Settings.Encoding).GetBytes(item));

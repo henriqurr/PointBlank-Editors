@@ -1,5 +1,6 @@
 ﻿using PropertyEditor.Managers;
 using PropertyEditor.Models;
+using PropertyEditor.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,9 +14,10 @@ namespace PropertyEditor
 {
     public partial class PropertyEditorView : Form
     {
-        private bool _encryptedPef = false;
+        public bool _encryptedPef = false, isEnvSet = false;
         private OpenFileDialog ofdPefSelector = new OpenFileDialog();
         List<TreeNode> oldNodes = new List<TreeNode>();
+
         public PropertyEditorView()
         {
             InitializeComponent();
@@ -24,7 +26,7 @@ namespace PropertyEditor
         private void PropertyEditor_Load(object sender, EventArgs e)
         {
             Console.WriteLine("Waiting for load file...");
-            lbNation.Text = "Nation:" + Settings.Nation;
+            lbNation.Text = "Pais da cliente: " + Settings.Nation;
             Console.WriteLine("Nation Selected: {0} idx: {1}", Settings.Nation, (int)Settings.Nation);
         }
 
@@ -56,6 +58,67 @@ namespace PropertyEditor
             if (ofdPefSelector.ShowDialog() == DialogResult.OK)
             {
                 FullClear(); //reset all infos
+
+                var fileNameSplited = ofdPefSelector.FileName.Substring(ofdPefSelector.FileName.LastIndexOf("\\") + 1);
+
+                isEnvSet = fileNameSplited.Contains("EnvSet");
+
+                string dir = string.Format("{0}/Profiles/", Application.StartupPath);
+
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                foreach (var paths in Directory.GetFiles(dir))
+                {
+                    FileInfo fileInfo = new FileInfo(paths);
+                    if (fileInfo.Name.Split('.')[0] == fileNameSplited.Split('.')[0])
+                    {
+                        byte[] buff = File.ReadAllBytes(paths);
+                        int editsCount = BitConverter.ToInt32(buff, 0);
+                        Nation nat = (Nation)BitConverter.ToInt32(buff, 4);
+
+                        StringBuilder sb = new StringBuilder();
+                        sb.AppendLine($"{editsCount} edições antigas foram encontradas para este arquivo na versão de cliente {(nat).ToString().ToUpper()}.\n");
+                        sb.AppendLine("Deseja carregar?");
+                        sb.AppendLine();
+                        sb.AppendLine("*SIM = Carregar.\n");
+                        sb.AppendLine("*NÃO = Não carregar e MANTER salvamento das edições antigas.\n");
+                        sb.AppendLine("*CANCELAR = Não carregar e EXCLUIR as edições antigas.");
+                            
+                        var dialog = MessageBox.Show(sb.ToString(), Application.ProductName, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                        if (dialog == DialogResult.Yes)
+                        {
+                            try
+                            {
+                                using (BinaryReader binaryReader = new BinaryReader(new MemoryStream(buff)))
+                                {
+                                    ObjectsManager.LoadEdited(binaryReader);
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                                MessageBox.Show("Falha ao carregar edições.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+                            }
+                        }
+                        else if (dialog == DialogResult.No)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            if (MessageBox.Show("Deseja mesmo excluir as edições antigas salvas?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                            {
+                                File.Delete(paths);
+                                MessageBox.Show("Excluido com sucesso.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                        }
+                    }
+                }
+
                 lbPath.Text = ofdPefSelector.FileName;
                 Console.WriteLine("Path file " + ofdPefSelector.FileName);
                 Console.WriteLine("Loading file...");
@@ -78,6 +141,7 @@ namespace PropertyEditor
                     StringTablesManager.GetStringTables(reader, HeaderManager._header);
                     ObjectsManager.GetObjects(reader, HeaderManager._header);
                     ObjectsManager.GetObjectsValues(reader);
+                    ObjectsManager.PutEdit();
                     ShowNodes();
                 }
                 //using (FileStream fs = new FileStream("Objects.json", FileMode.Create))
@@ -161,9 +225,13 @@ namespace PropertyEditor
                 tvFolders.EndUpdate();
                 tvFolders.Enabled = true;
                 lvDataItems.Enabled = true;
-                button1.Enabled = true;
+                button1.Enabled = false;
+                button2.Enabled = true;
                 textBox1.Enabled = true;
-                MessageBox.Show("Sucess!");
+                saveToolStripMenuItem.Enabled = true;
+                saveAsToolStripMenuItem.Enabled = true;
+                pbTotal.Value = 0;
+                MessageBox.Show("Arquivo carregado com sucesso.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             if (pbTotal.Value < pbTotal.Maximum)
@@ -239,38 +307,13 @@ namespace PropertyEditor
 
         public void SetProgressBarValue(long receive, long total)
         {
-            pbTotal.Value = (int)(receive * 100 / total);
+            try
+            {
+                pbTotal.Value = (int)(receive * 100 / total);
+            }
+            catch { }
         }
 
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(ofdPefSelector.FileName))
-                return;
-            using (FileStream fs = new FileStream(ofdPefSelector.FileName, FileMode.Create))
-            {
-                using (BinaryWriter bw = new BinaryWriter(fs))
-                {
-                    HeaderManager.WriteHeader(bw);
-                    StringTablesManager.WriteStringTables(bw);
-                    ObjectsManager.WriteObjects(bw);
-                    ObjectsManager.WriteObjectsKeys(bw);
-                    ObjectsManager.SetOffsets(bw);
-                }
-                MessageBox.Show("Sucess!");
-            }
-            if (_encryptedPef)
-            {
-                byte[] buffer = File.ReadAllBytes(ofdPefSelector.FileName);
-                for (var i = 0; i < buffer.Length; i += 2048)
-                {
-                    BitRotate.Shift(buffer, i, 2048, 3); //descriptografa em blocos de 2048 bytes (FIX)
-                }
-                using (FileStream fs = new FileStream(ofdPefSelector.FileName, FileMode.Create))
-                {
-                    fs.Write(buffer, 0, buffer.Length);
-                }
-            }
-        }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -342,7 +385,7 @@ namespace PropertyEditor
                             }
                         }
                         lvDataItems.EndUpdate();
-                        MessageBox.Show((obj.Keys.Type == 9 ? obj.Keys.Nations[(int)Settings.Nation] : obj.Keys.Nations[0]) + "");
+                        MessageBox.Show((obj.Keys.Type == 9 ? obj.Keys.Nations[(int)Settings.Nation] : obj.Keys.Nations[0]) + "", obj.GetNameTitle(), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
@@ -363,7 +406,7 @@ namespace PropertyEditor
             Objects obj = ObjectsManager.GetObjectById(ulong.Parse(tvFolders.SelectedNode.Name));
             if (obj == null)
             {
-                MessageBox.Show("It was not possible to get the information for this object.", Application.ProductName);
+                MessageBox.Show("Não foi possível carregar o objeto.", Application.ProductName);
                 return;
             }
             StringBuilder stringBuilder = new StringBuilder();
@@ -405,7 +448,7 @@ namespace PropertyEditor
             {
                 if (settings.ShowDialog() == DialogResult.OK)
                 {
-                    MessageBox.Show("Changes made successfully.", Application.ProductName);
+                    MessageBox.Show("Configurações salvas com sucesso.", Application.ProductName);
                 }
             }
         }
@@ -419,17 +462,24 @@ namespace PropertyEditor
         {
             Console.WriteLine("Cleaning all old infos...");
             lbPath.Text = "None";
+            isEnvSet = false;
             lvDataItems.Enabled = false;
             tvFolders.Enabled = false;
             lbEncrypted.Text = "None";
             _encryptedPef = false;
+            saveToolStripMenuItem.Enabled = false;
+            saveAsToolStripMenuItem.Enabled = false;
             tvFolders.Nodes.Clear();
             lvDataItems.Items.Clear();
             pbTotal.Value = 0;
+            button1.Enabled = false;
+            button2.Enabled = false;
             HeaderManager._header = new Header();
             StringTablesManager._stringTables = new List<StringTable>();
             ObjectsManager._changeOffsets = new Dictionary<ulong, ulong>();
             ObjectsManager._objects = new List<Objects>();
+            ObjectsManager._editSaved = new Dictionary<ulong, Objects>();
+            ObjectsManager._loadSaved = new Dictionary<ulong, Objects>();
         }
 
         private void toolStripStatusLabel1_Click(object sender, EventArgs e)
@@ -449,39 +499,49 @@ namespace PropertyEditor
 
         private void button1_Click(object sender, EventArgs e)
         {
+            int j = 0;
+            if (j == 0)
+            {
+                textBox1.Text = "";
+                MessageBox.Show("Buscar está sendo re-criado para correção de bugs.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             string text = textBox1.Text.Trim().ToLower();
-            List<TreeNode> foundNodes = new List<TreeNode>();
-            button1.Enabled = false;
-            tvFolders.BeginUpdate();
-            for (int i = 0; i < tvFolders.Nodes.Count; i++)
+            if (text.Length > 0)
             {
-                var item = tvFolders.Nodes[i];
-                oldNodes.Add(item);
-                if (item.Text.ToLower().Contains(text))
-                    foundNodes.Add(item);
-                LoadSubChidrenNodes(item, foundNodes, text);
-            }
-            tvFolders.Nodes.Clear();
-            TreeNode lastItem = new TreeNode();
-            foreach(var item in foundNodes)
-            {
-                if (lastItem.Nodes.Count > 0 && lastItem.Nodes.Contains(item))
+                List<TreeNode> foundNodes = new List<TreeNode>();
+                button1.Enabled = false;
+                tvFolders.BeginUpdate();
+                for (int i = 0; i < tvFolders.Nodes.Count; i++)
                 {
-                    continue;
+                    var item = tvFolders.Nodes[i];
+                    oldNodes.Add(item);
+                    if (item.Text.ToLower().Contains(text))
+                        foundNodes.Add(item);
+                    LoadSubChidrenNodes(item, foundNodes, text);
                 }
-                tvFolders.Nodes.Add(item);
-                lastItem = item;
-                //item.EnsureVisible();
-                //item.Expand();
+                oldNodes.AddRange(foundNodes);
+                tvFolders.Nodes.Clear();
+                TreeNode lastItem = new TreeNode();
+                foreach (var item in foundNodes)
+                {
+                    if (lastItem.Nodes.Count > 0 && lastItem.Nodes.Contains(item))
+                    {
+                        continue;
+                    }
+                    tvFolders.Nodes.Add(item);
+                    lastItem = item;
+                    //item.EnsureVisible();
+                    //item.Expand();
+                }
+                if (foundNodes.Count > 0)
+                    tvFolders.SelectedNode = foundNodes[0];
+                tvFolders.Sort();
+                tvFolders.EndUpdate();
+
+                Console.WriteLine("Founded items: {0}", foundNodes.Count);
+                lbFoundNodes.Text = string.Format("Buscar: {0} items encontrados.", foundNodes.Count);
             }
-            if(foundNodes.Count > 0)
-                tvFolders.SelectedNode = foundNodes[0];
-            tvFolders.Sort();
-            tvFolders.EndUpdate();
-            button2.Enabled = true;
-            
-            Console.WriteLine("Items Found: {0}", foundNodes.Count);
-            lbFoundNodes.Text = string.Format("Search: {0} items found.", foundNodes.Count);
         }
 
         private void LoadSubChidrenNodes(TreeNode treeNode, List<TreeNode> foundNodes, string text)
@@ -490,31 +550,84 @@ namespace PropertyEditor
             {
                 var item = treeNode.Nodes[i];
                 if (item.Text.ToLower().Contains(text))
+                {
                     foundNodes.Add(item);
+                }
                 LoadSubChidrenNodes(item, foundNodes, text);
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            tvFolders.Nodes.Clear();
-            tvFolders.BeginUpdate();
-            for (int i = 0; i < oldNodes.Count; i++)
+            if (oldNodes.Count > 0)
             {
-                var item = oldNodes[i];
-                tvFolders.Nodes.Add(item);
+                tvFolders.Nodes.Clear();
+                tvFolders.BeginUpdate();
+                for (int i = 0; i < oldNodes.Count; i++)
+                {
+                    var item = oldNodes[i];
+                    try
+                    {
+                        tvFolders.Nodes.Add(item);
+                    }
+                    catch { }
+                }
+                tvFolders.EndUpdate();
+                oldNodes.Clear();
+                textBox1.Text = "";
+                lbFoundNodes.Text = "";
+                button1.Enabled = false;
             }
-            tvFolders.EndUpdate();
-            oldNodes.Clear();
-            textBox1.Text = "";
-            lbFoundNodes.Text = "";
-            button2.Enabled = false;
-            button1.Enabled = true;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
+            Environment.Exit(0);
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(ofdPefSelector.FileName))
+                return;
+            var oldFileName = ofdPefSelector.FileName.Substring(ofdPefSelector.FileName.LastIndexOf("\\") + 1);
+            using (FileStream fs = new FileStream(ofdPefSelector.FileName, FileMode.Create))
+            {
+                using (BinaryWriter bw = new BinaryWriter(fs))
+                {
+                    HeaderManager.WriteHeader(bw);
+                    StringTablesManager.WriteStringTables(bw);
+                    ObjectsManager.WriteObjects(bw);
+                    ObjectsManager.WriteObjectsKeys(bw);
+                    ObjectsManager.SetOffsets(bw);
+                }
+
+                if (ObjectsManager._editSaved.Count > 0)
+                {
+                    using (FileStream fileStream = new FileStream(string.Format("{0}/Profiles/XXXXXXXXXXX", Application.StartupPath).Replace("XXXXXXXXXXX", $"{oldFileName.Split('.')[0]}.dat"), FileMode.Create))
+                    {
+                        using (BinaryWriter binaryWriter = new BinaryWriter(fileStream))
+                        {
+                            ObjectsManager.SaveEdited(binaryWriter);
+                        }
+                    }
+                }
+
+                MessageBox.Show("Arquivo salvo com sucesso.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            if (_encryptedPef)
+            {
+                byte[] buffer = File.ReadAllBytes(ofdPefSelector.FileName);
+                for (var i = 0; i < buffer.Length; i += 2048)
+                {
+                    BitRotate.Shift(buffer, i, 2048, 3); //descriptografa em blocos de 2048 bytes (FIX)
+                }
+                using (FileStream fs = new FileStream(ofdPefSelector.FileName, FileMode.Create))
+                {
+                    fs.Write(buffer, 0, buffer.Length);
+                }
+            }
+            pbTotal.Value = 0;
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -535,7 +648,19 @@ namespace PropertyEditor
                         ObjectsManager.WriteObjectsKeys(bw);
                         ObjectsManager.SetOffsets(bw);
                     }
-                    MessageBox.Show("Sucess!");
+
+                    if (ObjectsManager._editSaved.Count > 0)
+                    {
+                        using (FileStream fileStream = new FileStream(string.Format("{0}/Profiles/XXXXXXXXXXX", Application.StartupPath).Replace("XXXXXXXXXXX", $"{oldFileName.Split('.')[0]}.dat"), FileMode.Create))
+                        {
+                            using (BinaryWriter binaryWriter = new BinaryWriter(fileStream))
+                            {
+                                ObjectsManager.SaveEdited(binaryWriter);
+                            }
+                        }
+                    }
+
+                    MessageBox.Show("Arquivo salvo com sucesso.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 if (_encryptedPef)
                 {
@@ -550,11 +675,47 @@ namespace PropertyEditor
                     }
                 }
             }
+            pbTotal.Value = 0;
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private void lvDataItems_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void desbloquearScriptToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (ofdPefSelector.ShowDialog() == DialogResult.OK)
+            {
+                FullClear(); //reset all infos
+                Console.WriteLine("Path file " + ofdPefSelector.FileName);
+                Console.WriteLine("Loading file...");
+
+                byte[] buffer = File.ReadAllBytes(ofdPefSelector.FileName);
+                byte[] newBuffer = new byte[buffer.Length];
+
+                using (FileStream fs = new FileStream(ofdPefSelector.FileName, FileMode.Create))
+                {
+                    using (BinaryWriter bw = new BinaryWriter(fs))
+                    {
+                        bw.Write(newBuffer);
+                    }
+                    MessageBox.Show("Arquivo desbloqueado.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                FullClear(); //reset all infos
+            }
+        }
+
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (textBox1.Text.Length > 0)
+            {
+                button1.Enabled = true;
+            }
+            else
+            {
+                button1.Enabled = false;
+            }
         }
     }
 }
