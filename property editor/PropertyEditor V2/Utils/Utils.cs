@@ -69,17 +69,17 @@ namespace PropertyEditor
             Console.Title = Application.ProductName + " - Debug Console";
             Console.CursorVisible = false;
             Console.WriteLine(@"
-______                          _           _____    _ _ _             
-| ___ \                        | |         |  ___|  | (_) |            
-| |_/ / __ ___  _ __   ___ _ __| |_ _   _  | |__  __| |_| |_ ___  _ __ 
+______                          _           _____    _ _ _
+| ___ \                        | |         |  ___|  | (_) |
+| |_/ / __ ___  _ __   ___ _ __| |_ _   _  | |__  __| |_| |_ ___  _ __
 |  __/ '__/ _ \| '_ \ / _ \ '__| __| | | | |  __|/ _` | | __/ _ \| '__|
-| |  | | | (_) | |_) |  __/ |  | |_| |_| | | |__| (_| | | || (_) | |   
-\_|  |_|  \___/| .__/ \___|_|   \__|\__, | \____/\__,_|_|\__\___/|_|   
-               | |                   __/ |                             
-               |_|                  |___/                              
+| |  | | | (_) | |_) |  __/ |  | |_| |_| | | |__| (_| | | || (_) | |
+\_|  |_|  \___/| .__/ \___|_|   \__|\__, | \____/\__,_|_|\__\___/|_|
+               | |                   __/ |
+               |_|                  |___/
 ");
             Console.WriteLine("Developed by Exploit Network");
-            Console.WriteLine("DEVS: Coyote, PISTOLA, Uzumendiz\n");
+            Console.WriteLine("DEVS: Coyote (https://github.com/erikvinicius), PISTOLA (https://github.com/henriqurr)\n");
         }
 
         public static Color HexToColor(string hexString)

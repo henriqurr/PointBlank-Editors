@@ -67,7 +67,7 @@ namespace PropertyEditor.Managers
                     obj.Keys.Type = reader.ReadInt32();
                     obj.Keys.ValueType = obj.Keys.Type == 9 ? reader.ReadInt32() : obj.Keys.Type;
                     obj.Keys.NationsCount = obj.Keys.Type == 9 ? reader.ReadInt32() : 1;
-                    GetValuesByNations(reader, obj); //puxa valores 
+                    GetValuesByNations(reader, obj); //puxa valores
                 }
                 Program._propertyEditor.SetProgressBarValue(i + 1, _objects.Count);
             }
@@ -81,16 +81,21 @@ namespace PropertyEditor.Managers
                 reader.ReadInt16();
                 obj.Keys.IsRegistryRoot = Convert.ToBoolean(reader.ReadInt32()); //isRegistryRoot
                 reader.ReadUInt16();
+
                 int foldersCount = reader.ReadInt32();
                 reader.ReadBytes(60);
+
                 for (int i = 0; i < foldersCount; i++)
                 {
                     ulong id = (ulong)reader.ReadInt32(); //id of folders with items
                     obj.Keys.Folders.Add(id);
                 }
+
                 reader.ReadBytes(4); //rgk1
+
                 int itemsCount = reader.ReadInt32();
                 reader.ReadUInt64();
+
                 for (int i = 0; i < itemsCount; i++)
                 {
                     ulong id = reader.ReadUInt64(); //id of items in folder
@@ -246,7 +251,7 @@ namespace PropertyEditor.Managers
             }
             _changeOffsets.Clear(); //clear new list offsets
         }
-		
+
         public static void WriteObjectsKeys(BinaryWriter bw)
         {
             Console.WriteLine("Writting objects keys {0}...", _objects.Count);
@@ -254,7 +259,7 @@ namespace PropertyEditor.Managers
             {
                 Objects obj = _objects[i];
                 obj.NewOffset = (ulong)bw.BaseStream.Position; //change new offset to objects
-                if(obj.Offset == obj.NewOffset)
+                if (obj.Offset == obj.NewOffset)
                     _changeOffsets.Remove(obj.Id);
                 bw.Write((byte)obj.Keys.Name.Length);
                 bw.Write(Encoding.GetEncoding(Settings.Encoding).GetBytes(obj.Keys.Name));
@@ -265,12 +270,12 @@ namespace PropertyEditor.Managers
                 else
                 {
                     bw.Write(obj.Keys.Type);
-                    if(obj.Keys.Type == 9)
+                    if (obj.Keys.Type == 9)
                     {
                         bw.Write(obj.Keys.ValueType);
                         bw.Write(obj.Keys.NationsCount);
                     }
-                    WriteValuesByNations(bw, obj); //escreve valores 
+                    WriteValuesByNations(bw, obj); //escreve valores
                 }
                 if (Program._propertyEditor.pbTotal.ProgressBar.InvokeRequired)
                 {
@@ -396,7 +401,7 @@ namespace PropertyEditor.Managers
         /// </summary>
         /// <param name="bw">Buffer</param>
         /// <returns></returns>
-        /// 
+        ///
         public static void SaveEdited(BinaryWriter bw)
         {
             if (_editSaved.Count == 0)

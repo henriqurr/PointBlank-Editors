@@ -4,12 +4,10 @@ using System.Windows.Forms;
 
 namespace PropertyEditor
 {
-    static class Program
+    protected static class Program
     {
         public static PropertyEditorView _propertyEditor;
-        /// <summary>
-        /// Ponto de entrada principal para o aplicativo.
-        /// </summary>
+
         [STAThread]
         static void Main()
         {

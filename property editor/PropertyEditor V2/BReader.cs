@@ -7,9 +7,10 @@ namespace PropertyEditor
     {
         public byte[] _buffer;
         public int _offset = 0;
+
         public BReader(byte[] buffer)
         {
-            this._buffer = buffer;
+            _buffer = buffer;
         }
 
         public long GetCurrentPostion()
@@ -23,12 +24,14 @@ namespace PropertyEditor
             _offset += 4;
             return num;
         }
+
         public uint ReadUInt()
         {
             uint num = BitConverter.ToUInt32(_buffer, _offset);
             _offset += 4;
             return num;
         }
+
         public byte ReadByte()
         {
             try
@@ -67,12 +70,14 @@ namespace PropertyEditor
             _offset += 8;
             return num;
         }
+
         public float ReadFloat()
         {
             float num = BitConverter.ToSingle(_buffer, _offset);
             _offset += 4;
             return num;
         }
+
         public long ReadLong()
         {
             long num = BitConverter.ToInt64(_buffer, _offset);
@@ -103,6 +108,7 @@ namespace PropertyEditor
             }
             return str;
         }
+
         public string ReadString(int Length, int CodePage)
         {
             string str = "";
@@ -112,19 +118,20 @@ namespace PropertyEditor
                 int length = str.IndexOf((char)0);
                 if (length != -1)
                     str = str.Substring(0, length);
-                this._offset += Length;
+                _offset += Length;
             }
             catch
             {
             }
             return str;
         }
+
         public string ReadString()
         {
             string result = "";
             try
             {
-                int count = (_buffer.Length - _offset);
+                int count = _buffer.Length - _offset;
                 result = Encoding.Unicode.GetString(_buffer, _offset, count);
                 int idx = result.IndexOf(char.MinValue);
                 if (idx != -1)
