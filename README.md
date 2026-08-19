@@ -19,40 +19,20 @@ Copyright © Exploit Network.
 
 ## Tools
 
-### Property Editor V2
+Each folder has its own README (file format, usage, and layout).
 
-Editor for Point Blank client `.pef` (property) files. View and edit properties, strings, and objects, with client nation support.
-
-- Solution: `property editor/PropertyEditor.sln`
-
-### i3PackTool
-
-Tool for opening and editing **i3Pack** archives (client resources). Lists nodes, files, and string tables in the pack.
-
-- Solution: `i3PackTool/i3PackTool.sln`
-
-### RSC Editor
-
-Viewer for **RSC** files, listing items and internal resource names.
-
-- Solution: `RSC Editor/RSC Editor.sln`
-
-### mqfEditor
-
-Editor for `.mqf` mission/quest files: cards, rewards, and related items.
-
-- Solution: `mqfEditor/mqfEditor.sln`
-
-### BitRotate
-
-**Bit rotate** utility to encrypt/decrypt files in 2048-byte blocks (shift/unshift).
-
-- Solution: `BitRotate/BitRotate.sln`
+| Folder                                         | File type                    | Docs                                  |
+| ---------------------------------------------- | ---------------------------- | ------------------------------------- |
+| [property editor](property%20editor/README.md) | `.pef` (I3R2 properties)     | [README](property%20editor/README.md) |
+| [i3PackTool](i3PackTool/README.md)             | i3Pack resource archives     | [README](i3PackTool/README.md)        |
+| [RSC Editor](RSC%20Editor/README.md)           | RSC resource catalogs        | [README](RSC%20Editor/README.md)      |
+| [mqfEditor](mqfEditor/README.md)               | `.mqf` missions / quests     | [README](mqfEditor/README.md)         |
+| [BitRotate](BitRotate/README.md)               | bit-rotate encrypt / decrypt | [README](BitRotate/README.md)         |
 
 ## Requirements
 
 - Windows
-- [.NET Framework 4.6.1](https://dotnet.microsoft.com/download/dotnet-framework/net461) (or later)
+- [.NET Framework 4.6.1](https://dotnet.microsoft.com/download/dotnet-framework/net461) (Property Editor V2 targets 4.7.2)
 - Visual Studio 2017+ (to build)
 
 ## Build
