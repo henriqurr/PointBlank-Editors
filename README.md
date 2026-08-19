@@ -38,3 +38,7 @@ Each folder has its own README (file format, usage, and layout).
 ## Build
 
 Open the `.sln` for the tool you want in Visual Studio and build in **Debug** or **Release**.
+
+## Related: i3EngineEditor (legacy AIO)
+
+Before these tools were split, **[i3EngineEditor](https://github.com/henriqurr/i3EngineEditor)** served as the all-in-one editor for i3/Point Blank files (2019, TeamExploit). While it is now considered **legacy** and no longer maintained, it still provides features that are not fully available in the split tools—such as advanced handling for **I3I / i3VTex images**, **`.sif` text editing**, **PEF XML dump**, and in-app bit-rotate functionality. Note that i3Pack support in that project is incomplete; for i3Pack files, use **i3PackTool** instead.
